@@ -1,0 +1,13 @@
+---
+- hosts: rabbitmq
+  become: yes
+  gather_facts: yes
+  pre_tasks:
+    - lineinfile:
+        line: "{{ hostvars[item].ansible_all_ipv4_addresses[1] }} {{ item }}"
+        path: /etc/hosts
+      with_items: "{{ play_hosts }}"
+  roles:
+    - role: "{{ playbook_dir | basename }}"
+      vars:
+        cluster_peer: "{{ play_hosts[0] if ansible_hostname != play_hosts[0] else None }}"

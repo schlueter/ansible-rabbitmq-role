@@ -1,0 +1,44 @@
+---
+- name: Create RabbitMQ cookie folder
+  file: path=/var/lib/rabbitmq state=directory
+
+- name: Copy RabbitMQ HA Cookie
+  copy:
+    mode=0400
+    dest=/var/lib/rabbitmq/.erlang.cookie
+    content={{ erlang_cookie }}
+
+- name: Install RabbitMQ
+  apt:
+    pkg=rabbitmq-server
+    state=latest
+    cache_valid_time=1800
+    update_cache=yes
+
+- name: Install main RabbitMQ config
+  template:
+    owner=root
+    group=root
+    mode=0644
+    src=etc/rabbitmq/rabbitmq.config.j2
+    dest=/etc/rabbitmq/rabbitmq.config
+  notify: restart rabbitmq
+
+- name: Copy RabbitMQ configs
+  copy: src=etc/{{ item }} dest=/etc/{{ item }} owner=root group=root mode=0644
+  with_items: [ default/rabbitmq-server, logrotate.d/rabbitmq-server ]
+  notify: restart rabbitmq
+
+- name: Ensure rabbitmq is running
+  service: name=rabbitmq-server state=started enabled=yes
+
+- name: Ensure HA policy on queues
+  rabbitmq_policy: name=HA pattern='.*' tags="ha-mode=all,ha-sync-mode=automatic"
+
+- name: Join replica nodes to primary
+  shell: "{{ item }}"
+  with_items:
+    - rabbitmqctl stop_app
+    - rabbitmqctl join_cluster rabbit@{{ cluster_peer }}
+    - rabbitmqctl start_app
+  when: cluster_peer != ''
