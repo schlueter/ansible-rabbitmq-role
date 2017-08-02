@@ -1,4 +1,7 @@
 ---
+- include: repo.yml
+  when: use_repo
+
 - name: Create RabbitMQ cookie folder
   file: path=/var/lib/rabbitmq state=directory
 
@@ -35,10 +38,16 @@
 - name: Ensure HA policy on queues
   rabbitmq_policy: name=HA pattern='.*' tags="ha-mode=all,ha-sync-mode=automatic"
 
+- name: Get nodename of cluster_peer
+  command:
+    rabbitmqctl eval 'node().'
+  delegate_to: "{{ cluster_peer }}"
+  register: cluster_peer_nodename
+  when: cluster_peer != ''
+
 - name: Join replica nodes to primary
-  shell: "{{ item }}"
-  with_items:
-    - rabbitmqctl stop_app
-    - rabbitmqctl join_cluster rabbit@{{ cluster_peer }}
-    - rabbitmqctl start_app
+  shell: |
+    rabbitmqctl stop_app
+    rabbitmqctl join_cluster {{ cluster_peer_nodename.stdout_lines[0] }}
+    rabbitmqctl start_app
   when: cluster_peer != ''

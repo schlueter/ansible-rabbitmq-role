@@ -4,4 +4,6 @@ default_user: r29
 default_password: ackbar
 mem_watermark: 0.4
 erlang_cookie: DEVMELRFICYPGZIZVGJM
-replica: no
+cluster_peer: []
+use_repo: yes
+hipe_compile: no

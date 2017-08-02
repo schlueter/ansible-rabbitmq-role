@@ -10,4 +10,4 @@
   roles:
     - role: "{{ playbook_dir | basename }}"
       vars:
-        cluster_peer: "{{ play_hosts[0] if ansible_hostname != play_hosts[0] else None }}"
+        cluster_peer: "{{ groups['rabbitmq'][0] if ansible_hostname != groups['rabbitmq'][0] else None }}"

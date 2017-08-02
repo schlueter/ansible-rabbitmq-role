@@ -1,0 +1,8 @@
+---
+- name: Add RabbitMQ signing key
+  apt_key: data="{{ rabbitmq_repo_key }}"
+
+- name: Add RabbitMQ Repo
+  apt_repository:
+    repo: deb https://www.rabbitmq.com/debian/ testing main
+    state: present

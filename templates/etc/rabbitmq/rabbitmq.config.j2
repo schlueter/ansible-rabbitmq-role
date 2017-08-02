@@ -3,29 +3,13 @@
 %% Trigger change on hostname change: {{ ansible_fqdn }} because rabbitmq cares
 %%
 [ { rabbit
-  , [ { tcp_listeners, [5672]}
-    , { log_levels,
+  , [ { log_levels,
         [ { connection, {{ log_level }} }
         , { channel,    {{ log_level }} } ]}
-    , { reverse_dns_lookups, true }
-    , { loopback_users, [] }
-    , { auth_backends, [ rabbit_auth_backend_internal ]}
-    , { password_hashing_module, rabbit_password_hashing_sha256 }
-
-    , { default_vhost, <<"/">> }
-    , { default_user, <<"{{ default_user }}">> }
-    , { default_pass, <<"{{ default_password }}">> }
-    , { default_permissions, [ <<".*">>, <<".*">>, <<".*">> ]}
-    , { default_user_tags, [ administrator ]}
 
     , { vm_memory_high_watermark, {{ mem_watermark }} }
-    , { hipe_compile, true } ]}
+    , { hipe_compile, {{ 'true' if hipe_compile else 'false' }} } ]}
 
 , { rabbitmq_management
     , [{ http_log_dir, "/var/log/rabbitmq/management_api.log" }]}
-
-, { rabbitmq_shovel, [{ shovels, [] }]}
-, { rabbitmq_stomp, [] }
-, { rabbitmq_mqtt, [] }
-, { rabbitmq_amqp1_0, [] }
-, { rabbitmq_auth_backend_ldap, [] } ].
+].
